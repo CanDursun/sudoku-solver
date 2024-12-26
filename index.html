@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sudoku Solver Visualizer</title>
+    <title>Sudoku Solver</title>
     <style>
         .sudoku-grid {
             display: grid;
@@ -13,6 +13,7 @@
             padding: 2px;
             width: fit-content;
             margin: 20px auto;
+            border: 2px solid #000;
         }
 
         .cell {
@@ -22,6 +23,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 0;
         }
 
         .cell input {
@@ -30,6 +32,18 @@
             border: none;
             text-align: center;
             font-size: 20px;
+            padding: 0;
+            margin: 0;
+            outline: none;
+        }
+
+        /* Just these two rules for removing increment buttons */
+        .cell input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+        }
+        
+        .cell input[type=number] {
+            -moz-appearance: textfield;
         }
 
         .cell input.initial {
@@ -47,7 +61,7 @@
             font-weight: bold;
         }
 
-        /* Add borders for 3x3 boxes */
+        /* 3x3 box borders */
         .cell:nth-child(3n) {
             border-right: 2px solid #000;
         }

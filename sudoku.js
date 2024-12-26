@@ -9,6 +9,9 @@ const sudokuString2 =
 const sudokuString3 =
   "300200000000107000706030500070009080900020004010800050009040301000702000000008006";
 
+let isSolving = false;
+let shouldStop = false;
+
 async function mainjs() {
   let suitableIndexes = [];
   const falselyInsertedIndexesAndNumbers = new Map();
@@ -33,6 +36,13 @@ async function mainjs() {
 
   let index = 0;
   while (index >= 0 && index < suitableIndexes.length) {
+    if (shouldStop) {
+      // Check if we should stop
+      isSolving = false;
+      setInputsEnabled(true);
+      return;
+    }
+
     let currentIndex = suitableIndexes[index];
 
     // Add delay to visualize the solving process
@@ -280,26 +290,24 @@ function isGroupValid(group) {
 // Add DOM-related functions
 function initializeGrid() {
   const grid = document.getElementById("sudokuGrid");
-  grid.innerHTML = "";
+  grid.innerHTML = ""; // Clear existing grid completely
 
-  // Create the 9x9 grid
+  // Create fresh 9x9 grid
   for (let row = 0; row < 9; row++) {
     for (let col = 0; col < 9; col++) {
       const cell = document.createElement("div");
       cell.className = "cell";
-      const input = document.createElement("input");
-      input.type = "text";
-      input.maxLength = 1;
-      input.pattern = "[1-9]";
-      const index = row * 9 + col;
-      input.dataset.index = index;
 
-      // Add input validation
+      const input = document.createElement("input");
+      input.type = "number";
+      input.min = "1";
+      input.max = "9";
+      input.maxLength = "1";
+      input.className = "cell-input";
+
+      // Prevent non-numeric input
       input.addEventListener("input", (e) => {
-        const value = e.target.value;
-        if (!/^[1-9]$/.test(value)) {
-          e.target.value = "";
-        }
+        e.target.value = e.target.value.replace(/[^1-9]/g, "");
       });
 
       cell.appendChild(input);
@@ -308,24 +316,27 @@ function initializeGrid() {
   }
 }
 
-function updateGrid(sudoku) {
+function updateGrid(values) {
   const inputs = document.querySelectorAll(".cell input");
   inputs.forEach((input, index) => {
-    const value = sudoku[index];
-    input.value = value === EMPTY_CELL ? "" : value;
-    input.readOnly = value !== EMPTY_CELL;
-    input.classList.toggle("initial", value !== EMPTY_CELL);
-    // Clear any previous styling
-    input.style.backgroundColor = value !== EMPTY_CELL ? "#f0f0f0" : "white";
+    input.value = values[index] === EMPTY_CELL ? "" : values[index];
+    input.readOnly = values[index] !== EMPTY_CELL;
+    if (input.readOnly) {
+      input.classList.add("initial");
+    } else {
+      input.classList.remove("initial");
+    }
   });
 }
 
 function highlightCell(index) {
+  if (shouldStop) return; // Don't highlight if we're stopping
+
   const cells = document.querySelectorAll(".cell input");
   cells.forEach((cell, i) => {
     if (i === index) {
       cell.style.backgroundColor = "#ffeb3b"; // Yellow highlight
-    } else if (!cell.readOnly) {
+    } else if (!cell.readOnly && !cell.value) {
       cell.style.backgroundColor = "white";
     }
   });
@@ -333,6 +344,13 @@ function highlightCell(index) {
 
 function updateStatus(message) {
   document.getElementById("status").textContent = message;
+}
+
+function setInputsEnabled(enabled) {
+  const inputs = document.querySelectorAll(".cell input");
+  inputs.forEach((input) => {
+    input.disabled = !enabled;
+  });
 }
 
 // Add event listeners
@@ -362,58 +380,48 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Clear button handler
   document.getElementById("clear").addEventListener("click", () => {
-    const emptyGrid = new Array(TOTAL_CELLS).fill(EMPTY_CELL);
-    updateGrid(emptyGrid);
-    updateStatus("Grid cleared");
+    // First stop any ongoing solving
+    shouldStop = true;
+    isSolving = false;
+
+    // Wait a brief moment for the solving to stop
+    setTimeout(() => {
+      // Create a new empty grid
+      initializeGrid();
+
+      // Double-check all inputs are cleared
+      document.querySelectorAll(".cell input").forEach((input) => {
+        input.value = "";
+        input.style.backgroundColor = "white";
+        input.readOnly = false;
+        input.classList.remove("initial");
+        input.disabled = false;
+      });
+
+      updateStatus("Grid cleared");
+    }, 100); // Small delay to ensure solving has stopped
   });
 
   // Solve button handler
   document.getElementById("solve").addEventListener("click", async () => {
+    if (isSolving) {
+      updateStatus("Already solving...");
+      return;
+    }
+
     try {
+      isSolving = true;
+      shouldStop = false; // Reset stop flag
+      setInputsEnabled(false);
+      updateStatus("Solving...");
       await mainjs();
     } catch (error) {
       console.error(error);
       updateStatus("Error solving puzzle!");
+    } finally {
+      isSolving = false;
+      shouldStop = false; // Make sure stop flag is reset
+      setInputsEnabled(true);
     }
   });
 });
-
-mainjs();
-
-// Add this function to create the grid
-function createSudokuGrid() {
-  const container = document.getElementById("sudoku_container");
-  container.innerHTML = ""; // Clear existing content
-
-  const grid = document.createElement("div");
-  grid.className = "sudoku-grid";
-
-  for (let i = 0; i < 9; i++) {
-    for (let j = 0; j < 9; j++) {
-      const cell = document.createElement("input");
-      cell.type = "number";
-      cell.className = "sudoku-cell";
-      cell.min = 1;
-      cell.max = 9;
-      cell.dataset.row = i;
-      cell.dataset.col = j;
-      grid.appendChild(cell);
-    }
-  }
-
-  container.appendChild(grid);
-}
-
-// Add event listener for page load
-document.addEventListener("DOMContentLoaded", () => {
-  createSudokuGrid();
-  loadPuzzle(sudokuString1); // Load initial puzzle
-});
-
-// Function to load a puzzle into the grid
-function loadPuzzle(puzzleString) {
-  if (!puzzleString) return;
-  const sudokuArray = puzzleString.split("");
-  updateGrid(sudokuArray);
-  updateStatus("Preset puzzle loaded");
-}
