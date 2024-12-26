@@ -302,12 +302,19 @@ function initializeGrid() {
       input.type = "number";
       input.min = "1";
       input.max = "9";
-      input.maxLength = "1";
-      input.className = "cell-input";
+      input.maxLength = "1"; // Limit to one character
 
-      // Prevent non-numeric input
+      // Enhanced input validation
       input.addEventListener("input", (e) => {
-        e.target.value = e.target.value.replace(/[^1-9]/g, "");
+        // Remove any non-numeric characters
+        let value = e.target.value.replace(/[^1-9]/g, "");
+
+        // Take only the first digit if multiple digits are entered
+        if (value.length > 0) {
+          value = value.slice(0, 1);
+        }
+
+        e.target.value = value;
       });
 
       cell.appendChild(input);
