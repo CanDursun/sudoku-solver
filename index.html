@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Solver Visualizer</title>
+    <style>
+        .sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 40px);
+            gap: 1px;
+            background-color: #000;
+            padding: 2px;
+            width: fit-content;
+            margin: 20px auto;
+        }
+
+        .cell {
+            width: 40px;
+            height: 40px;
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cell input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            text-align: center;
+            font-size: 20px;
+        }
+
+        .cell input.initial {
+            background-color: #f0f0f0;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px;
+        }
+
+        #status {
+            text-align: center;
+            margin: 10px;
+            font-weight: bold;
+        }
+
+        /* Add borders for 3x3 boxes */
+        .cell:nth-child(3n) {
+            border-right: 2px solid #000;
+        }
+
+        .cell:nth-child(9n) {
+            border-right: none;
+        }
+
+        .cell:nth-child(n+19):nth-child(-n+27),
+        .cell:nth-child(n+46):nth-child(-n+54) {
+            border-bottom: 2px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Sudoku Solver</h1>
+    <div class="controls">
+        <select id="preset">
+            <option value="">Select a preset puzzle</option>
+            <option value="1">Puzzle 1</option>
+            <option value="2">Puzzle 2</option>
+            <option value="3">Puzzle 3</option>
+        </select>
+        <button id="solve">Solve</button>
+        <button id="clear">Clear</button>
+    </div>
+    <div id="status"></div>
+    <div id="sudokuGrid" class="sudoku-grid"></div>
+    <script src="sudoku.js"></script>
+</body>
+</html>
